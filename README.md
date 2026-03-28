@@ -1,56 +1,56 @@
 # gofenc
 
-Jednoduchý šifrovací nástroj napsaný v Go.
+A simple file encryption tool written in Go.
 
-## O projektu
+## About
 
-`gofenc` je CLI nástroj pro šifrování souborů a složek pomocí konceptu **vaultu** (trezoru). Vault je složka na disku, ve které jsou soubory šifrované individuálně. Na rozdíl od nástrojů jako Cryptomator nevyžaduje FUSE ani virtuální disk — soubory se šifrují a dešifrují explicitně příkazem.
+`gofenc` is a CLI tool for encrypting files and folders using a **vault** concept. A vault is a folder on disk where files are encrypted individually. Unlike tools such as Cryptomator, it does not require FUSE or a virtual disk — files are encrypted and decrypted explicitly via command.
 
-## Funkce
+## Features
 
-- Šifrování jednotlivých souborů i celých složek
-- Podpora dvou šifrovacích algoritmů: **AES-256-GCM** nebo **ChaCha20-Poly1305**
-- Derivace klíče pomocí **Argon2id** (modernější alternativa k scrypt)
-- Autentizace pomocí **hesla** nebo **keyfile**
-- Volitelné šifrování názvů souborů
-- Multiplatformní — Windows, macOS, Linux
+- Encryption of individual files and entire folders
+- Support for two encryption algorithms: **AES-256-GCM** or **ChaCha20-Poly1305**
+- Key derivation using **Argon2id** (a more modern alternative to scrypt)
+- Authentication via **password** or **keyfile**
+- Optional filename encryption
+- Cross-platform — Windows, macOS, Linux
 
-## Použití
+## Usage
 
-### Vytvoření vaultu
-
-```bash
-# Vault s heslem, AES-256-GCM, šifrování názvů souborů
-gofenc vault init ./trezor --cipher aes-gcm --encrypt-names --auth password
-
-# Vault s keyfile, ChaCha20
-gofenc vault init ./trezor --cipher chacha20 --auth keyfile
-```
-
-### Práce se soubory
+### Creating a vault
 
 ```bash
-# Přidání souboru do vaultu
-gofenc vault add ./trezor foto.jpg
+# Vault with password, AES-256-GCM, filename encryption enabled
+gofenc init ./myvault --cipher aes-gcm --encrypt-names --auth password
 
-# Odebrání souboru z vaultu
-gofenc vault remove ./trezor foto.jpg
-
-# Výpis obsahu vaultu
-gofenc vault list ./trezor
+# Vault with keyfile, ChaCha20
+gofenc init ./myvault --cipher chacha20 --auth keyfile
 ```
 
-### Zamčení / odemčení
+### Working with files
 
 ```bash
-# Zašifruje všechny soubory ve vaultu
-gofenc vault lock ./trezor
+# Add a file to the vault
+gofenc add ./myvault photo.jpg
 
-# Dešifruje všechny soubory do výstupní složky
-gofenc vault unlock ./trezor --out ./vystup
+# Remove a file from the vault
+gofenc remove ./myvault photo.jpg
+
+# List vault contents
+gofenc list ./myvault
 ```
 
-## Struktura projektu
+### Extracting files
+
+```bash
+# Decrypt and extract a single file
+gofenc extract ./myvault photo.jpg ./output
+
+# Decrypt and extract all files
+gofenc extract-all ./myvault ./output
+```
+
+## Project structure
 
 ```
 gofenc/
@@ -63,8 +63,8 @@ gofenc/
 │   ├── add.go
 │   ├── remove.go
 │   ├── list.go
-│   ├── lock.go
-│   └── unlock.go
+│   ├── extract.go
+│   └── helpers.go
 ├── vault/
 │   ├── vault.go
 │   ├── init.go
@@ -82,13 +82,13 @@ gofenc/
     └── filename.go
 ```
 
-## Struktura vaultu na disku
+## Vault structure on disk
 
 ```
-trezor/
-├── vault.json        - metadata (algoritmus, KDF parametry, zašifrovaný master key)
+myvault/
+├── vault.json        — metadata (algorithm, KDF parameters, encrypted master key)
 └── files/
-    ├── a1b2c3d4.enc  - zašifrovaný obsah souboru
+    ├── a1b2c3d4.enc  — encrypted file content
     └── e5f6g7h8.enc
 ```
 
@@ -112,80 +112,79 @@ trezor/
 }
 ```
 
-### Formát .enc souboru
+### .enc file format
 
 ```
 ┌─────────────────────────────────────┐
 │  HEADER (plaintext)                 │
-│  - magic bytes: "GOFENC" (5 bytes)  │
+│  - magic bytes: "GOFENC" (6 bytes)  │
 │  - version: uint8 (1 byte)          │
+├─────────────────────────────────────┤
+│  per chunk (64 KB):                 │
 │  - nonce: 12 bytes (AES-GCM)        │
-│           nebo 24 bytes (ChaCha20)  │
-├─────────────────────────────────────┤
-│  ENCRYPTED PAYLOAD                  │
-│  - původní název souboru            │
-│  - obsah souboru (chunky po 64KB)   │
-├─────────────────────────────────────┤
-│  AUTH TAG (16 bytes)                │
-│  - GCM nebo Poly1305 tag            │
+│           or 24 bytes (ChaCha20)    │
+│  - chunk length: uint32 (4 bytes)   │
+│  - encrypted data + auth tag        │
 └─────────────────────────────────────┘
 ```
 
-## Kryptografický design
+## Cryptographic design
 
-| Účel | Algoritmus |
+| Purpose | Algorithm |
 |---|---|
-| Šifrování obsahu | AES-256-GCM nebo ChaCha20-Poly1305 |
-| Derivace klíče z hesla | Argon2id |
-| Šifrování master keye | stejný algoritmus jako obsah |
-| Integrita | AEAD auth tag (součást GCM / Poly1305) |
+| Content encryption | AES-256-GCM or ChaCha20-Poly1305 |
+| Key derivation from password | Argon2id |
+| Master key encryption | same algorithm as content |
+| Integrity | AEAD auth tag (GCM / Poly1305) |
 
-### Proč Argon2id místo scrypt?
+### Why Argon2id instead of scrypt?
 
-Argon2id je vítěz [Password Hashing Competition](https://www.password-hashing.net) a je odolnější vůči side-channel útokům než scrypt, který používá například Cryptomator.
+Argon2id won the [Password Hashing Competition](https://www.password-hashing.net) in 2015 and is more resistant to side-channel attacks than scrypt, which is used by Cryptomator. The `id` variant combines the GPU resistance of Argon2d with the side-channel resistance of Argon2i, making it the recommended choice per RFC 9106.
 
-### Separace klíčů
+### Key separation
 
-Heslo nikdy přímo nešifruje data. Tok je následující:
-
-```
-heslo → Argon2id → wrapping key → dešifruje master key → šifruje soubory
-```
-
-Výhoda: změna hesla znamená pouze přešifrování master keye, ne celého vaultu.
-
-## Závislosti
+The password never directly encrypts data. The flow is:
 
 ```
-golang.org/x/crypto       - Argon2id, ChaCha20-Poly1305
-github.com/spf13/cobra    - CLI framework
-github.com/google/uuid    - UUID pro názvy .enc souborů
+password → Argon2id → wrapping key → decrypts master key → encrypts files
 ```
 
-## Instalace
+Benefit: changing the password only requires re-encrypting the master key, not the entire vault.
+
+## Dependencies
+
+```
+golang.org/x/crypto       — Argon2id, ChaCha20-Poly1305
+github.com/spf13/cobra    — CLI framework
+github.com/google/uuid    — UUID-based names for .enc files
+golang.org/x/term         — secure password input (no echo)
+```
+
+## Installation
 
 ```bash
-# Naklonování repozitáře
+# Clone the repository
 git clone https://github.com/njten/gofenc
 cd gofenc
 
-# Stažení závislostí
+# Download dependencies
 go mod download
 
-# Sestavení binárky
+# Build the binary
 go build -o gofenc .
 ```
 
 ## Threat model
 
-| Hrozba | Chráněno? | Poznámka |
+| Threat | Protected? | Notes |
 |---|---|---|
-| Krádež disku / souboru | ✅ | AES-GCM / ChaCha20 |
-| Slabé heslo | ⚠️ | Argon2id zpomaluje útok |
-| Modifikace souboru | ✅ | AEAD auth tag |
-| Metadata leak (názvy souborů) | ✅ / ❌ | volitelné šifrování názvů |
-| Paměťový útok za běhu | ❌ | mimo scope |
-| Kvantový počítač | ❌ | mimo scope |
+| Disk / file theft | ✅ | AES-GCM / ChaCha20 |
+| Weak password | ⚠️ | Argon2id slows down brute-force |
+| File tampering | ✅ | AEAD auth tag |
+| Metadata leak (filenames) | ✅ / ❌ | optional filename encryption |
+| In-memory attack at runtime | ❌ | out of scope |
+| Quantum computer | ❌ | out of scope |
 
-## Licence
+## License
+
 [MIT](LICENSE)
