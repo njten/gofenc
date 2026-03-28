@@ -1,0 +1,8 @@
+testdata/*
+
+.idea/*
+
+.DS_Store
+/crypto/crypto_test.go
+/vault/vault_test.go
+/cmd/cmd_test.go
