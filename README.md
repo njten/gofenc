@@ -72,6 +72,7 @@ gofenc/
 │   ├── remove.go
 │   ├── list.go
 │   ├── lock.go
+│   ├── extract.go
 │   └── unlock.go
 └── crypto/
     ├── kdf.go

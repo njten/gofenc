@@ -8,7 +8,7 @@ import (
 
 const (
 	chunkSize  = 64 * 1024
-	headerSize = 5 + 1
+	headerSize = 6 + 1
 )
 
 func Encrypt(inputPath, outputPath string, masterKey []byte, useAES bool) error {
@@ -66,7 +66,7 @@ func Encrypt(inputPath, outputPath string, masterKey []byte, useAES bool) error 
 			}
 			chunkIndex++
 		}
-		if err != io.EOF {
+		if err == io.EOF {
 			break
 		}
 		if err != nil {

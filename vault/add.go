@@ -16,7 +16,7 @@ type FileEntry struct {
 }
 
 func (v *Vault) Add(filePath string) error {
-	if v.isLocked() {
+	if v.IsLocked() {
 		return errors.New("vault is locked")
 	}
 	if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
@@ -26,7 +26,7 @@ func (v *Vault) Add(filePath string) error {
 	encFileName := uuid.New().String() + ".enc"
 	encFilePath := filepath.Join(v.FilesDir(), encFileName)
 
-	if err := crypto.Encrypt(filePath, encFileName, v.MasterKey, v.UseAES()); err != nil {
+	if err := crypto.Encrypt(filePath, encFilePath, v.MasterKey, v.UseAES()); err != nil {
 		return fmt.Errorf("encryption failed: %w", err)
 	}
 

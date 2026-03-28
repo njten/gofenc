@@ -24,10 +24,10 @@ func Decrypt(inputPath, outputPath string, masterKey []byte, useAES bool) error 
 	if _, err := io.ReadFull(inFile, header); err != nil {
 		return errors.New("unable to load the file header")
 	}
-	if string(header[:5]) != "GOFENC" {
+	if string(header[:6]) != "GOFENC" {
 		return errors.New("invalid file format")
 	}
-	if header[5] != 1 {
+	if header[6] != 1 {
 		return errors.New("unsupported file format")
 	}
 

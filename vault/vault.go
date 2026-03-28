@@ -92,7 +92,7 @@ func (v *Vault) FilesDir() string {
 	return filepath.Join(v.Path, FilesDirName)
 }
 
-func (v *Vault) isLocked() bool {
+func (v *Vault) IsLocked() bool {
 	return v.MasterKey == nil
 }
 

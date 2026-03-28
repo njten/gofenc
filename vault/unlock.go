@@ -42,11 +42,3 @@ func (v *Vault) Unlock(secret string) error {
 	fmt.Println("Vault unlocked")
 	return nil
 }
-
-func (v *Vault) Lock() {
-	for i := range v.MasterKey {
-		v.MasterKey[i] = 0
-	}
-	v.MasterKey = nil
-	fmt.Println("Vault locked")
-}

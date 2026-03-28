@@ -11,10 +11,10 @@ func (v *Vault) List() error {
 		return nil
 	}
 
-	if v.isLocked() {
+	if v.IsLocked() {
 		return errors.New("vault is locked")
 	}
-	fmt.Println("%-40s %s\n", "original name", "encrypted name")
+	fmt.Printf("%-40s %s\n", "original name", "encrypted name")
 	fmt.Println("----------------------------------------------------------")
 	for _, f := range v.Config.Files {
 		fmt.Printf("%-40s %s\n", f.OriginalName, f.EncryptedName)
