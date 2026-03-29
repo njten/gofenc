@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "cipher": "aes-256-gcm",
+  "kdf": "argon2id",
+  "kdf_params": {
+    "time": 3,
+    "memory": 65536,
+    "threads": 4,
+    "salt": "jdOfgDeG/mywpnOd8rFeeHES5ccW/2BIGD2zgd09jEQ="
+  },
+  "encrypt_filenames": false,
+  "auth": "password",
+  "encrypted_master_key": "bZwZjzPX61HZ1d7TXTMlzF8d6fW3Lsna4NCsKCVk0cIoSWXOCMM0AVMR4zugWNn0",
+  "master_key_nonce": "l+Yu5L2IdMNSHpI2",
+  "files": [
+    {
+      "original_name": "test.txt",
+      "encrypted_name": "91cbf4e8-3b92-4208-85d2-e41715c1a464.enc"
+    }
+  ]
+}

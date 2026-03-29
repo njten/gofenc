@@ -41,6 +41,6 @@ func (v *Vault) Add(filePath string) error {
 		return fmt.Errorf("failed to save vault.json: %w", err)
 	}
 
-	fmt.Printf("Added: %s → %s\\n", originalName, encFileName)
+	fmt.Printf("Added: %s -> %s\n", originalName, encFileName)
 	return nil
 }
