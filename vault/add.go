@@ -31,8 +31,19 @@ func (v *Vault) Add(filePath string) error {
 	}
 
 	originalName := filepath.Base(filePath)
+	storedName := originalName
+
+	if v.Config.EncryptFileNames {
+		encrypted, err := crypto.EncryptFilename(originalName, v.MasterKey)
+		if err != nil {
+			os.Remove(encFilePath)
+			return fmt.Errorf("failed to encrypt filename: %w", err)
+		}
+		storedName = encrypted
+	}
+
 	v.Config.Files = append(v.Config.Files, FileEntry{
-		OriginalName:  originalName,
+		OriginalName:  storedName,
 		EncryptedName: encFileName,
 	})
 

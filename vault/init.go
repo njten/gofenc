@@ -69,10 +69,10 @@ func Init(vaultPath string, opts InitOptions) error {
 		return fmt.Errorf("the vault cannot be saved: %w", err)
 	}
 
-	fmt.Printf("Your new vault is at 	 %s\n", vaultPath)
-	fmt.Printf("Alghorithm: 				 %s\n", opts.Cipher)
+	fmt.Printf("Your new vault is at %s\n", vaultPath)
+	fmt.Printf("Alghorithm: %s\n", opts.Cipher)
 	fmt.Printf("Encryption of file names: %v\n", opts.EncryptFileNames)
-	fmt.Printf("Auth: 					 %s\n", opts.Auth)
+	fmt.Printf("Auth: %s\n", opts.Auth)
 
 	return nil
 }
