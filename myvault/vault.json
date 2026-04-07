@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "cipher": "aes-256-gcm",
+  "kdf": "argon2id",
+  "kdf_params": {
+    "time": 3,
+    "memory": 65536,
+    "threads": 4,
+    "salt": "pJHXsuqDoqWqkhSEWDhesndHn9Wfkr7syptPA2guK0A="
+  },
+  "encrypt_filenames": true,
+  "auth": "password",
+  "encrypted_master_key": "/DtSH8oF4Pql9YpkdV58y6k9iGIDjbJrddh6n7M4TQN0twhVnrRukcJSCWKvTE1J",
+  "master_key_nonce": "pK1RCCf6PKgxFpHq",
+  "files": null
+}
