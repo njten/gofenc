@@ -4,15 +4,16 @@ A simple file encryption tool written in Go.
 
 ## About
 
-`gofenc` is a CLI tool for encrypting files and folders using a **vault** concept. A vault is a folder on disk where files are encrypted individually. Unlike tools such as Cryptomator, it does not require FUSE or a virtual disk — files are encrypted and decrypted explicitly via command.
+`gofenc` is a CLI tool for encrypting files and folders using a **vault** concept. A vault is a folder on disk where files are encrypted individually. Unlike tools such as Cryptomator, it does not require FUSE or a virtual disk — files are encrypted and decrypted explicitly via command. Filenames are always encrypted.
 
 ## Features
 
 - Encryption of individual files and entire folders
 - Support for two encryption algorithms: **AES-256-GCM** or **ChaCha20-Poly1305**
 - Key derivation using **Argon2id** (a more modern alternative to scrypt)
-- Authentication via **password** or **keyfile**
-- Optional filename encryption
+- Authentication via **password** or **keyfile** (auto-generated)
+- Filename encryption — original filenames are never stored in plaintext
+- Lock/unlock mechanism — vault can be locked to prevent modifications
 - Cross-platform — Windows, macOS, Linux
 
 ## Usage
@@ -20,11 +21,12 @@ A simple file encryption tool written in Go.
 ### Creating a vault
 
 ```bash
-# Vault with password, AES-256-GCM, filename encryption enabled
-gofenc init ./myvault --cipher aes-gcm --encrypt-names --auth password
+# Vault with password and AES-256-GCM
+gofenc init ./myvault --cipher aes-gcm --auth password
 
-# Vault with keyfile, ChaCha20
+# Vault with auto-generated keyfile and ChaCha20
 gofenc init ./myvault --cipher chacha20 --auth keyfile
+# Output: Keyfile generated: ./myvault.key — keep it safe!
 ```
 
 ### Working with files
@@ -33,7 +35,11 @@ gofenc init ./myvault --cipher chacha20 --auth keyfile
 # Add a file to the vault
 gofenc add ./myvault photo.jpg
 
-# Remove a file from the vault
+# Add an entire directory
+gofenc add ./myvault ./documents
+
+# Remove a file from the vault (by index or original filename)
+gofenc remove ./myvault 1
 gofenc remove ./myvault photo.jpg
 
 # List vault contents
@@ -43,11 +49,31 @@ gofenc list ./myvault
 ### Extracting files
 
 ```bash
-# Decrypt and extract a single file
-gofenc extract ./myvault photo.jpg ./output
+# Decrypt and extract a single file by index (see: gofenc list)
+gofenc extract ./myvault 1 ./output
 
 # Decrypt and extract all files
 gofenc extract-all ./myvault ./output
+```
+
+### Locking and unlocking
+
+```bash
+# Lock the vault — disables add, remove and extract
+gofenc lock ./myvault
+
+# Unlock the vault — re-enables all operations
+gofenc unlock ./myvault
+```
+
+### Deleting a vault
+
+```bash
+# Delete the vault permanently (asks for confirmation)
+gofenc delete ./myvault
+
+# Skip confirmation
+gofenc delete ./myvault --force
 ```
 
 ## Project structure
@@ -64,6 +90,9 @@ gofenc/
 │   ├── remove.go
 │   ├── list.go
 │   ├── extract.go
+│   ├── lock.go
+│   ├── unlock.go
+│   ├── delete.go
 │   └── helpers.go
 ├── vault/
 │   ├── vault.go
@@ -72,8 +101,9 @@ gofenc/
 │   ├── remove.go
 │   ├── list.go
 │   ├── lock.go
+│   ├── unlock.go
 │   ├── extract.go
-│   └── unlock.go
+│   └── delete.go
 └── crypto/
     ├── kdf.go
     ├── masterkey.go
@@ -87,6 +117,7 @@ gofenc/
 ```
 myvault/
 ├── vault.json        — metadata (algorithm, KDF parameters, encrypted master key)
+├── .locked           — present when vault is locked (optional)
 └── files/
     ├── a1b2c3d4.enc  — encrypted file content
     └── e5f6g7h8.enc
@@ -105,10 +136,15 @@ myvault/
     "threads": 4,
     "salt": "base64encodedSalt..."
   },
-  "encrypt_filenames": true,
   "auth": "password",
   "encrypted_master_key": "base64encodedEncryptedKey...",
-  "master_key_nonce": "base64encodedNonce..."
+  "master_key_nonce": "base64encodedNonce...",
+  "files": [
+    {
+      "original_name": "base64encryptedFilename...",
+      "encrypted_name": "uuid.enc"
+    }
+  ]
 }
 ```
 
@@ -133,6 +169,7 @@ myvault/
 | Purpose | Algorithm |
 |---|---|
 | Content encryption | AES-256-GCM or ChaCha20-Poly1305 |
+| Filename encryption | AES-256-GCM |
 | Key derivation from password | Argon2id |
 | Master key encryption | same algorithm as content |
 | Integrity | AEAD auth tag (GCM / Poly1305) |
@@ -181,7 +218,7 @@ go build -o gofenc .
 | Disk / file theft | ✅ | AES-GCM / ChaCha20 |
 | Weak password | ⚠️ | Argon2id slows down brute-force |
 | File tampering | ✅ | AEAD auth tag |
-| Metadata leak (filenames) | ✅ / ❌ | optional filename encryption |
+| Metadata leak (filenames) | ✅ | filenames are always encrypted |
 | In-memory attack at runtime | ❌ | out of scope |
 | Quantum computer | ❌ | out of scope |
 
