@@ -8,9 +8,11 @@ import (
 
 const (
 	chunkSize  = 64 * 1024
-	headerSize = 6 + 1
+	headerSize = 6 + 1 // "GOFENC" (6 bytes) + version (1 byte)
 )
 
+// Encrypt reads the input file, encrypts it in 64KB chunks using AES-256-GCM or
+// ChaCha20-Poly1305, and writes the result to the output file.
 func Encrypt(inputPath, outputPath string, masterKey []byte, useAES bool) error {
 	inFile, err := os.Open(inputPath)
 	if err != nil {

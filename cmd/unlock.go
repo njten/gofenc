@@ -8,20 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// addCmd encrypts a file or directory and stores it inside the vault.
-var addCmd = &cobra.Command{
-	Use:   "add <vault> <file>",
-	Short: "Add and encrypt a file into the vault",
-	Args:  cobra.ExactArgs(2),
+// unlockCmd verifies the user's secret, loads the master key and removes the .locked file.
+var unlockCmd = &cobra.Command{
+	Use:   "unlock <vault>",
+	Short: "Unlock the vault — enables add and remove",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		v, err := vault.Load(args[0])
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "error:", err)
-			os.Exit(1)
-		}
-
-		if v.IsVaultLocked() {
-			fmt.Fprintln(os.Stderr, "error: vault is locked — run: gofenc unlock <vault>")
 			os.Exit(1)
 		}
 
@@ -35,14 +30,10 @@ var addCmd = &cobra.Command{
 			fmt.Fprintln(os.Stderr, "error:", err)
 			os.Exit(1)
 		}
-
-		if err := v.Add(args[1]); err != nil {
-			fmt.Fprintln(os.Stderr, "error:", err)
-			os.Exit(1)
-		}
+		fmt.Println("vault unlocked")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(unlockCmd)
 }

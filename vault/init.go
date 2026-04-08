@@ -9,13 +9,15 @@ import (
 	"github.com/njten/gofenc/crypto"
 )
 
+// InitOptions holds the configuration options for creating a new vault.
 type InitOptions struct {
-	Cipher           CipherType
-	EncryptFileNames bool
-	Auth             AuthType
-	Secret           string
+	Cipher CipherType
+	Auth   AuthType
+	Secret string
 }
 
+// Init creates a new vault at the given path with the provided options.
+// If auth is keyfile, a keyfile is automatically generated next to the vault.
 func Init(vaultPath string, opts InitOptions) error {
 	if err := validateNewVaultPath(vaultPath); err != nil {
 		return err
@@ -23,6 +25,20 @@ func Init(vaultPath string, opts InitOptions) error {
 
 	if err := os.MkdirAll(filepath.Join(vaultPath, FilesDirName), 0700); err != nil {
 		return fmt.Errorf("the vault structure cannot be created: %w", err)
+	}
+
+	// generate keyfile automatically if auth is keyfile
+	if opts.Auth == AuthKeyFile {
+		keyfilePath := vaultPath + ".key"
+		keyfileData, err := crypto.GenerateRandom(32)
+		if err != nil {
+			return fmt.Errorf("failed to generate keyfile: %w", err)
+		}
+		if err := os.WriteFile(keyfilePath, keyfileData, 0600); err != nil {
+			return fmt.Errorf("failed to write keyfile: %w", err)
+		}
+		opts.Secret = keyfilePath
+		fmt.Printf("Keyfile generated: %s — keep it safe!\n", keyfilePath)
 	}
 
 	salt, err := crypto.GenerateRandom(32)
@@ -58,7 +74,6 @@ func Init(vaultPath string, opts InitOptions) error {
 				Threads: kdfParams.Threads,
 				Salt:    Base64Encode(salt),
 			},
-			EncryptFileNames:   opts.EncryptFileNames,
 			Auth:               opts.Auth,
 			EncryptedMasterKey: Base64Encode(encMasterKey),
 			MasterKeyNonce:     Base64Encode(nonce),
@@ -70,13 +85,12 @@ func Init(vaultPath string, opts InitOptions) error {
 	}
 
 	fmt.Printf("Your new vault is at %s\n", vaultPath)
-	fmt.Printf("Alghorithm: %s\n", opts.Cipher)
-	fmt.Printf("Encryption of file names: %v\n", opts.EncryptFileNames)
+	fmt.Printf("Algorithm: %s\n", opts.Cipher)
 	fmt.Printf("Auth: %s\n", opts.Auth)
-
 	return nil
 }
 
+// validateNewVaultPath checks that the given path is suitable for a new vault.
 func validateNewVaultPath(path string) error {
 	info, err := os.Stat(path)
 	if errors.Is(err, os.ErrNotExist) {

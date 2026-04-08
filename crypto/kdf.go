@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
+// Argon2Params holds the parameters for the Argon2id key derivation function.
 type Argon2Params struct {
 	Time    uint32
 	Memory  uint32
@@ -15,6 +16,7 @@ type Argon2Params struct {
 	Salt    []byte
 }
 
+// DefaultArgon2Params returns the recommended Argon2id parameters per OWASP guidelines.
 func DefaultArgon2Params(salt []byte) Argon2Params {
 	return Argon2Params{
 		Time:    3,
@@ -24,6 +26,7 @@ func DefaultArgon2Params(salt []byte) Argon2Params {
 	}
 }
 
+// GenerateRandom returns n cryptographically secure random bytes.
 func GenerateRandom(n int) ([]byte, error) {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
@@ -31,16 +34,16 @@ func GenerateRandom(n int) ([]byte, error) {
 		return nil, errors.New("failed to generate random bytes")
 	}
 	return b, err
-
 }
 
+// DeriveKey derives a 32-byte key from a password or keyfile using Argon2id.
 func DeriveKey(secret string, isKeyfile bool, params Argon2Params) ([]byte, error) {
 	var secretBytes []byte
 
 	if isKeyfile {
 		data, err := os.ReadFile(secret)
 		if err != nil {
-			return nil, errors.New("failed to read keyfile" + err.Error())
+			return nil, errors.New("failed to read keyfile: " + err.Error())
 		}
 		secretBytes = data
 	} else {

@@ -7,6 +7,8 @@ import (
 	"github.com/njten/gofenc/crypto"
 )
 
+// Unlock derives the wrapping key from the user's secret, decrypts the master key,
+// and removes the .locked file to enable vault operations.
 func (v *Vault) Unlock(secret string) error {
 	salt, err := Base64Decode(v.Config.KDFParams.Salt)
 	if err != nil {
@@ -39,6 +41,10 @@ func (v *Vault) Unlock(secret string) error {
 	}
 
 	v.MasterKey = masterKey
-	fmt.Println("Vault unlocked")
+
+	if err := v.setLocked(false); err != nil {
+		return fmt.Errorf("failed to unlock vault: %w", err)
+	}
+
 	return nil
 }

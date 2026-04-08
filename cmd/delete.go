@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// deleteCmd permanently removes the vault directory and all its contents.
 var deleteCmd = &cobra.Command{
 	Use:   "delete <vault>",
 	Short: "Permanently delete a vault and all its contents",
@@ -36,5 +37,5 @@ var deleteCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(deleteCmd)
-		deleteCmd.Flags().Bool("force", false, "skip confirmation prompt")
+	deleteCmd.Flags().Bool("force", false, "skip confirmation prompt")
 }

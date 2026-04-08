@@ -13,6 +13,7 @@ var rootCmd = &cobra.Command{
 	Long:  "gofenc is a CLI tool for encrypting files and folders using a vault-based approach.",
 }
 
+// Execute runs the root command and exits on error.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

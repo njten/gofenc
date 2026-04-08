@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+// Decrypt reads an encrypted file produced by Encrypt, verifies the header,
+// and writes the decrypted content to the output file.
 func Decrypt(inputPath, outputPath string, masterKey []byte, useAES bool) error {
 	inFile, err := os.Open(inputPath)
 	if err != nil {
@@ -28,7 +30,7 @@ func Decrypt(inputPath, outputPath string, masterKey []byte, useAES bool) error 
 		return errors.New("invalid file format")
 	}
 	if header[6] != 1 {
-		return errors.New("unsupported file format")
+		return errors.New("unsupported file format version")
 	}
 
 	aead, err := newAEAD(masterKey, useAES)
@@ -65,7 +67,7 @@ func Decrypt(inputPath, outputPath string, masterKey []byte, useAES bool) error 
 
 		plaintext, err := aead.Open(nil, nonce, encrypted, ad)
 		if err != nil {
-			return errors.New("error decrypting")
+			return errors.New("decryption failed — wrong key or corrupted data")
 		}
 
 		if _, err := outFile.Write(plaintext); err != nil {
