@@ -11,6 +11,7 @@ import (
 const (
 	VaultFileName  = "vault.json"
 	FilesDirName   = "files"
+	HiddenFilesDirName = ".files"
 	LockedVault    = ".locked"
 	CurrentVersion = 1
 )

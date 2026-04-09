@@ -3,12 +3,14 @@ package vault
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/njten/gofenc/crypto"
 )
 
-// Unlock derives the wrapping key from the user's secret, decrypts the master key,
-// and removes the .locked file to enable vault operations.
+// Unlock derives the wrapping key from the user's secret, decrypts the master
+// key, restores the files/ directory and removes the .locked file.
 func (v *Vault) Unlock(secret string) error {
 	salt, err := Base64Decode(v.Config.KDFParams.Salt)
 	if err != nil {
@@ -42,9 +44,18 @@ func (v *Vault) Unlock(secret string) error {
 
 	v.MasterKey = masterKey
 
+	hiddenDir := filepath.Join(v.Path, HiddenFilesDirName)
+	if _, err := os.Stat(hiddenDir); err == nil {
+		if err := os.Rename(hiddenDir, v.FilesDir()); err != nil {
+			return fmt.Errorf("failed to restore files directory: %w", err)
+		}
+	}
+
 	if err := v.setLocked(false); err != nil {
+		os.Rename(v.FilesDir(), hiddenDir)
 		return fmt.Errorf("failed to unlock vault: %w", err)
 	}
 
+	fmt.Println("vault unlocked")
 	return nil
 }
