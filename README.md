@@ -4,7 +4,7 @@ A simple file encryption tool written in Go.
 
 ## About
 
-`gofenc` is a CLI tool for encrypting files and folders using a **vault** concept. A vault is a folder on disk where files are encrypted individually. Unlike tools such as Cryptomator, it does not require FUSE or a virtual disk — files are encrypted and decrypted explicitly via command. Filenames are always encrypted.
+`gofenc` is a CLI tool for encrypting files and folders using a **vault** concept. A vault is a folder on the disk where files are encrypted individually. Unlike tools such as Cryptomator, it does not require FUSE or a virtual disk — files are encrypted and decrypted explicitly via command. Filenames are always encrypted.
 
 ## Features
 
@@ -13,7 +13,7 @@ A simple file encryption tool written in Go.
 - Key derivation using **Argon2id** (a more modern alternative to scrypt)
 - Authentication via **password** or **keyfile** (auto-generated)
 - Filename encryption — original filenames are never stored in plaintext
-- Lock/unlock mechanism — vault can be locked to prevent modifications
+- Lock/unlock mechanism — locking re-wraps the master key with a fresh nonce and hides the encrypted files directory, making the vault unusable without the correct secret
 - Cross-platform — Windows, macOS, Linux
 
 ## Usage
@@ -59,10 +59,10 @@ gofenc extract-all ./myvault ./output
 ### Locking and unlocking
 
 ```bash
-# Lock the vault — disables add, remove and extract
+# Lock the vault — re-wraps master key, hides files, disables all operations
 gofenc lock ./myvault
 
-# Unlock the vault — re-enables all operations
+# Unlock the vault — verifies secret, restores files, re-enables all operations
 gofenc unlock ./myvault
 ```
 
@@ -117,10 +117,11 @@ gofenc/
 ```
 myvault/
 ├── vault.json        — metadata (algorithm, KDF parameters, encrypted master key)
-├── .locked           — present when vault is locked (optional)
-└── files/
-    ├── a1b2c3d4.enc  — encrypted file content
-    └── e5f6g7h8.enc
+├── .locked           — present when vault is locked
+├── files/            — encrypted files (present when unlocked)
+│   ├── a1b2c3d4.enc
+│   └── e5f6g7h8.enc
+└── .files/           — hidden files directory (present when locked)
 ```
 
 ### vault.json
@@ -188,6 +189,15 @@ password → Argon2id → wrapping key → decrypts master key → encrypts file
 
 Benefit: changing the password only requires re-encrypting the master key, not the entire vault.
 
+### Lock/unlock mechanism
+
+Locking combines two security measures:
+
+1. **Cryptographic lock** — the master key is re-wrapped with a fresh nonce and saved back to `vault.json`. The plaintext master key is wiped from memory. Simply deleting `.locked` does not restore access.
+2. **Physical lock** — the `files/` directory is renamed to `.files/`. Even if `.locked` is removed, the encrypted files are no longer at the expected path and all vault operations will fail until a proper unlock is performed.
+
+Unlocking verifies the user's secret, decrypts the master key, renames `.files/` back to `files/` and removes `.locked`.
+
 ## Dependencies
 
 ```
@@ -219,6 +229,7 @@ go build -o gofenc .
 | Weak password | ⚠️ | Argon2id slows down brute-force |
 | File tampering | ✅ | AEAD auth tag |
 | Metadata leak (filenames) | ✅ | filenames are always encrypted |
+| Bypassing lock by deleting .locked | ✅ | files/ directory is also hidden |
 | In-memory attack at runtime | ❌ | out of scope |
 | Quantum computer | ❌ | out of scope |
 
