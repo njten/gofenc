@@ -56,3 +56,7 @@ var lockCmd = &cobra.Command{
 		return v.Lock(masterKey, wrappingKey)
 	},
 }
+
+func init() {
+	rootCmd.AddCommand(lockCmd)
+}
