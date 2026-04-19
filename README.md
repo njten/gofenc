@@ -56,10 +56,10 @@ go build -o gofenc.exe .
 
 ```bash
 # Vault with password and AES-256-GCM
-gofenc init ./myvault --cipher aes-gcm --auth password
+./gofenc init ./myvault --cipher aes-gcm --auth password
 
 # Vault with auto-generated keyfile and ChaCha20
-gofenc init ./myvault --cipher chacha20 --auth keyfile
+./gofenc init ./myvault --cipher chacha20 --auth keyfile
 # Output: Keyfile generated: ./myvault.key — keep it safe!
 ```
 
@@ -67,47 +67,47 @@ gofenc init ./myvault --cipher chacha20 --auth keyfile
 
 ```bash
 # Add a file to the vault
-gofenc add ./myvault photo.jpg
+./gofenc add ./myvault photo.jpg
 
 # Add an entire directory
-gofenc add ./myvault ./documents
+./gofenc add ./myvault ./documents
 
 # Remove a file from the vault (by index or original filename)
-gofenc remove ./myvault 1
-gofenc remove ./myvault photo.jpg
+./gofenc remove ./myvault 1
+./gofenc remove ./myvault photo.jpg
 
 # List vault contents
-gofenc list ./myvault
+./gofenc list ./myvault
 ```
 
 ### Extracting files
 
 ```bash
-# Decrypt and extract a single file by index (see: gofenc list)
-gofenc extract ./myvault 1 ./output
+# Decrypt and extract a single file by index (see: ./gofenc list)
+./gofenc extract ./myvault 1 ./output
 
 # Decrypt and extract all files
-gofenc extract-all ./myvault ./output
+./gofenc extract-all ./myvault ./output
 ```
 
 ### Locking and unlocking
 
 ```bash
 # Lock the vault — re-wraps master key, hides files, disables all operations
-gofenc lock ./myvault
+./gofenc lock ./myvault
 
 # Unlock the vault — verifies secret, restores files, re-enables all operations
-gofenc unlock ./myvault
+./gofenc unlock ./myvault
 ```
 
 ### Deleting a vault
 
 ```bash
 # Delete the vault permanently (asks for confirmation)
-gofenc delete ./myvault
+./gofenc delete ./myvault
 
 # Skip confirmation
-gofenc delete ./myvault --force
+./gofenc delete ./myvault --force
 ```
 
 ## Project structure
