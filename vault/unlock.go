@@ -56,6 +56,5 @@ func (v *Vault) Unlock(secret string) error {
 		return fmt.Errorf("failed to unlock vault: %w", err)
 	}
 
-	fmt.Println("vault unlocked")
 	return nil
 }

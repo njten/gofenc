@@ -16,7 +16,41 @@ A simple file encryption tool written in Go.
 - Lock/unlock mechanism — locking re-wraps the master key with a fresh nonce and hides the encrypted files directory, making the vault unusable without the correct secret
 - Cross-platform — Windows, macOS, Linux
 
-## Usage
+## Installation MacOS / Linux
+
+```bash
+# Clone the repository
+git clone https://github.com/njten/gofenc
+cd gofenc
+
+# Download dependencies
+go mod download
+
+# Build the binary
+go build -o gofenc .
+
+# Run
+./gofenc --help
+```
+
+## Installation Windows
+```powershell
+# Clone the repository
+git clone https://github.com/njten/gofenc
+cd gofenc
+
+# Download dependencies
+go mod download
+
+# Build the binary
+go build -o gofenc.exe .
+
+# Run
+.\gofenc.exe --help
+```
+> **Note:** On Windows, replace `./` with `.\` in all commands.
+
+## Usage on MacOS
 
 ### Creating a vault
 
@@ -205,20 +239,6 @@ golang.org/x/crypto       — Argon2id, ChaCha20-Poly1305
 github.com/spf13/cobra    — CLI framework
 github.com/google/uuid    — UUID-based names for .enc files
 golang.org/x/term         — secure password input (no echo)
-```
-
-## Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/njten/gofenc
-cd gofenc
-
-# Download dependencies
-go mod download
-
-# Build the binary
-go build -o gofenc .
 ```
 
 ## Threat model
